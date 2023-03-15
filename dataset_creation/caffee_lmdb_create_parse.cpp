@@ -253,7 +253,7 @@ int write_caffe_lmdb_records(char * dbFolder, char *imgFile, char *cocoDataset)
     int rc;
     string image_path ="";
     string image_byte_data = "";
-    string temp_path ="/media/akilesh/unittest_script/new_dataset/caffe/";
+    string temp_path ="/media/swetha/unittest_script/new_dataset/caffe1/";
     
     // Environment handles for LMDB record creation, writing and reading
     MDB_env *env;
@@ -313,7 +313,16 @@ int write_caffe_lmdb_records(char * dbFolder, char *imgFile, char *cocoDataset)
             cout << "IMAGE PATH: " << image_path << endl<<imgFile;
                 
             // Reading image from a file an creating a MAT structure    
-            Mat img = imread(image_path);      
+            Mat img = imread(image_path);   
+            FILE * fp = fopen (image_path.c_str() , "rb");
+            fseek(fp,0L,SEEK_END);
+            int max_size=ftell(fp);
+            fseek(fp,0L,SEEK_SET);
+            char *r_image=(char*)malloc(max_size*sizeof(char));
+            fread(r_image,1,max_size,fp);
+            
+
+
             if (!img.data)
             {
                 cout << "Reading Image from specfied File Path Failed" << endl;
@@ -328,7 +337,7 @@ int write_caffe_lmdb_records(char * dbFolder, char *imgFile, char *cocoDataset)
             // Encoding the image bytes into Image Datum PROTOS structure
             vector<uchar> buf;
             imencode(".jpg",img,buf);
-            image_datum_protos->set_data(buf.data(), buf.size() * sizeof(uchar));
+            image_datum_protos->set_data(r_image, max_size * sizeof(char));
                 
             // Creating a serailized object of images, label and Bounding box PROTOS structure    
             annotatedDatum_protos.SerializeToString(&image_byte_data);

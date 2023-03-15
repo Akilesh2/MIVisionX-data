@@ -333,7 +333,13 @@ int write_lmdb_records(char * dbFolder, char *imgFile, char *cocoDataset)
             cout << "IMAGE PATH: " << image_path << endl;
                 
             // Reading image from a file an creating a MAT structure    
-            Mat img = imread(image_path);      
+            Mat img = imread(image_path);  
+            FILE * fp = fopen (image_path.c_str() , "rb");
+            fseek(fp,0L,SEEK_END);
+            int max_size=ftell(fp);
+            fseek(fp,0L,SEEK_SET);
+            char *r_image=(char*)malloc(max_size*sizeof(char));
+            fread(r_image,1,max_size,fp);    
             if (!img.data)
             {
                 cout << "Reading Image from specfied File Path Failed" << endl;
@@ -351,7 +357,9 @@ int write_lmdb_records(char * dbFolder, char *imgFile, char *cocoDataset)
             // Encoding the image bytes into Image PROTOS structure
             vector<uchar> buf;
             imencode(".jpg",img,buf);
-            image_protos->set_byte_data(buf.data(), buf.size() * sizeof(uchar));
+            image_protos->set_byte_data(r_image, max_size * sizeof(char));
+
+            // image_protos->set_byte_data(buf.data(), buf.size() * sizeof(uchar));
                 
             // Creating a serailized object of images, label and Bounding box PROTOS structure    
             tens_protos.SerializeToString(&image_byte_data);
